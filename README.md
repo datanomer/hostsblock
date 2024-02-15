@@ -1,6 +1,6 @@
 # hostsblock
-Simple website blocker which utilizes the hosts file to block sites on local machine
-
+Simple website blocker which utilizes the hosts file to block sites on local machine.
+Use at your own responsibility.
 ## requirement:
 * Cmake
 * Linux(for now)
@@ -9,7 +9,7 @@ Simple website blocker which utilizes the hosts file to block sites on local mac
 
 ## Usage
 Run the command ```make``` in the cloned directory.
-Then execute the executable with ```./hblock```.
+Then execute the executable with appropriate permissions ```sudo ./hblock```.
 
 ## Information:
 
