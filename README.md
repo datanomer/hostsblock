@@ -13,5 +13,5 @@ Then execute the executable with appropriate permissions ```sudo ./hblock```.
 
 ## Information:
 
-- Hostsblock simply writes the input site to the hosts file (found in linux by /etc/hosts)
+- Hostsblock simply writes the input site to the hosts file (found in linux by /etc/hosts) and redirects it to localhost addresses
 
