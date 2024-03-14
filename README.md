@@ -11,7 +11,8 @@ Use at your own responsibility.
 Run the command ```make``` in the cloned directory.
 Then execute the executable with appropriate permissions ```sudo ./hblock```.
 
-## Information:
 
-- Hostsblock simply writes the input site to the hosts file (found in linux by /etc/hosts) and redirects it to localhost addresses
+## Information and stuff:
 
+- Hostsblock simply writes the input site to the hosts file (found in linux by /etc/hosts) and redirects it to localhost address
+- (Block deletion function is currently not operational)
