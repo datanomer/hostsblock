@@ -12,8 +12,6 @@ FILE *filep;
 
 // plan: ability to remove blocks from sites
 // straight from command line execution(ex. user@machine:~$ hblock twitter.com)
-
-
 void block_add(char *input_buf)
 {
     regex_t rx;
@@ -25,8 +23,9 @@ void block_add(char *input_buf)
     {
         fprintf(filep,"\n" LOCALH "       %s", input_buf);
         fprintf(filep,"\n" LOCALIP6 "             %s", input_buf);
-        printf("Blocking %s ...", input_buf);
+        printf("Blocking %s ...\n", input_buf);
         fclose(filep);
+        system("cat /etc/hosts");
     }
     else if (regval == REG_NOMATCH)
     {
@@ -40,27 +39,40 @@ void block_add(char *input_buf)
         };
     }
 }
-void block_srch(char *input_buf)
-{
-
-    int line_pos = ftell(filep);
-    char thing =fscanf(filep, "%s", input_buf);
-    fseek(filep, line_pos, SEEK_SET); // fseek(stream to modify, offset, origin)
-    fwrite("#", 1, 1,filep); 
-    // does not comment out wanted lines in the file    
-
-}
-
-
 void block_del(char *input_buf)
 {
-    //below maybe needed maybe not
-    //regval_ip4 = regcomp(&rx, "", REG_EXTENDED); 
-    //regval_ip4 = regexec(&rx, input_buf, 0, NULL, 0 );
-    //regval_ip6 = regcomp(&rx, "", REG_EXTENDED); 
-    //regval_ip6 = regexec(&rx, input_buf, 0, NULL, 0 );
-    //could be put in a struct
+    regex_t rx;
+    int regval;
+    regval = regcomp(&rx, "[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,3}(/[^[:space:]]*)?$" , REG_EXTENDED); 
+    regval = regexec(&rx, input_buf, 0, NULL, 0);
+    if (regval == 0) {
     
+        printf("Unblocking %s ... \n ", input_buf);
+       
+        int line_pos = ftell(filep);
+        char thing =fscanf(filep, "%s", input_buf);
+        
+        // algo for checking file line by line for match
+        for (;;) {
+        }
+
+        fseek(filep, line_pos, SEEK_SET); // fseek(stream to modify, offset, origin)
+        fwrite("#", 1, 1,filep); 
+        fclose(filep);
+        system("cat /etc/hosts");       
+    }
+    else if (regval == REG_NOMATCH) {
+        printf("Not valid URL");
+    }
+    else {
+        printf("Something went shit.");
+        if (filep == NULL) {
+            printf("Aborting...\n");
+        };
+    }
+
+    // does not comment out wanted lines in the file    
+
 }
 
 int main(int argc, char** argv)
@@ -69,13 +81,6 @@ int main(int argc, char** argv)
     filep = fopen(HFILE, "a+");
 
     char input_buf[40]; 
- 
-    regex_t rx;
-    int regval_input_buf;
-    int regval_ip4;
-    int regval_ip6;
-    regval_input_buf = regcomp(&rx, "[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,3}(/[^[:space:]]*)?$" , REG_EXTENDED); 
-    regval_input_buf = regexec(&rx, input_buf, 0, NULL, 0); 
 
     printf("|--hblock--|\n"); 
     printf("Choose option: \n1. Block site\n2. Remove block from site \n");
