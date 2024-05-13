@@ -3,7 +3,7 @@
 #include <regex.h>
 #include <sys/stat.h>
 #include <stdlib.h>
-
+#include <time.h>
 #define HFILE "/etc/hosts"
 //#define LOCALIP4 "127.0.0.1"
 #define LOCALH "localhost"
@@ -14,6 +14,7 @@ FILE *filep;
 // straight from command line execution(ex. user@machine:~$ hblock twitter.com)
 void block_add(char *input_buf)
 {
+    time_t timestamp;
     regex_t rx;
     int regval;
     regval = regcomp(&rx, "[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,3}(/[^[:space:]]*)?$" , REG_EXTENDED); 
@@ -21,9 +22,11 @@ void block_add(char *input_buf)
 
     if (regval == 0)
     {
-        fprintf(filep,"\n" LOCALH "       %s", input_buf);
-        fprintf(filep,"\n" LOCALIP6 "             %s", input_buf);
+        time(&timestamp);
+        fprintf(filep,"\n" LOCALH "       %s #Timestamp: %s ", input_buf, ctime(&timestamp));
+        fprintf(filep,""LOCALIP6 "             %s ", input_buf);
         printf("Blocking %s ...\n", input_buf);
+        
         fclose(filep);
         system("cat /etc/hosts");
     }
@@ -50,11 +53,14 @@ void block_del(char *input_buf)
         printf("Unblocking %s ... \n ", input_buf);
        
         int line_pos = ftell(filep);
-        char thing =fscanf(filep, "%s", input_buf);
+        char thing = fscanf(filep, "%s", input_buf);
         
+
         // algo for checking file line by line for match
         for (;;) {
+        
         }
+
 
         fseek(filep, line_pos, SEEK_SET); // fseek(stream to modify, offset, origin)
         fwrite("#", 1, 1,filep); 
