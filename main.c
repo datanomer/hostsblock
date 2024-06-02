@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#define HFILE "test"
+#define HFILE "/etc/hosts"
 //#define LOCALIP4 "127.0.0.1"
 #define LOCALH "localhost"
 #define LOCALIP6 "::1"
@@ -51,7 +51,7 @@ void block_del(char *input_buf)
 {
     regex_t rx;
 
-    assert(regcomp(&rx, "[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,3}(/[^[:space:]]*)?$" , REG_EXTENDED)); 
+    int regval = regcomp(&rx, "[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,3}(/[^[:space:]]*)?$" , REG_EXTENDED); 
     int result = regexec(&rx, input_buf, 0, NULL, 0);
      
     char *line = NULL;
@@ -64,15 +64,16 @@ void block_del(char *input_buf)
         while(getline(&line, &line_len, filep) != -1)
         {
             if (result == 0) {
-                fprintf(filep,"\n#" LOCALH "       %s ", input_buf);
+                fprintf(filep,"\n#" LOCALH "       %s \n", input_buf);
                 fprintf(filep,"#"LOCALIP6 "             %s ", input_buf);
             }
-
+    //delete blocking lines from hfile
             //fprintf(filep, "%s \n", input_buf);           
         }
         printf("%s Unblocked.\n", input_buf);
         assert(feof(filep));
         regfree(&rx);
+        system("cat /etc/hosts");
         //system("cat /etc/hosts");
     }
     else if (result == REG_NOMATCH) {
