@@ -4,7 +4,11 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <time.h>
-#define HFILE "/etc/hosts"
+//#include <malloc.h>
+#include <assert.h>
+#include <stdlib.h>
+
+#define HFILE "test"
 //#define LOCALIP4 "127.0.0.1"
 #define LOCALH "localhost"
 #define LOCALIP6 "::1"
@@ -33,6 +37,7 @@ void block_add(char *input_buf)
     else if (regval == REG_NOMATCH)
     {
         printf("Not valid, try again: ");
+        fclose(filep);
     }
     else
     {
@@ -45,30 +50,34 @@ void block_add(char *input_buf)
 void block_del(char *input_buf)
 {
     regex_t rx;
-    int regval;
-    regval = regcomp(&rx, "[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,3}(/[^[:space:]]*)?$" , REG_EXTENDED); 
-    regval = regexec(&rx, input_buf, 0, NULL, 0);
-    if (regval == 0) {
+
+    assert(regcomp(&rx, "[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,3}(/[^[:space:]]*)?$" , REG_EXTENDED)); 
+    int result = regexec(&rx, input_buf, 0, NULL, 0);
+     
+    char *line = NULL;
+    size_t line_len = 0;
+
+    if (result == 0) {
     
         printf("Unblocking %s ... \n ", input_buf);
-       
-        int line_pos = ftell(filep);
-        char thing = fscanf(filep, "%s", input_buf);
-        
+    
+        while(getline(&line, &line_len, filep) != -1)
+        {
+            if (result == 0) {
+                fprintf(filep,"\n#" LOCALH "       %s ", input_buf);
+                fprintf(filep,"#"LOCALIP6 "             %s ", input_buf);
+            }
 
-        // algo for checking file line by line for match
-        for (;;) {
-        
+            //fprintf(filep, "%s \n", input_buf);           
         }
-
-
-        fseek(filep, line_pos, SEEK_SET); // fseek(stream to modify, offset, origin)
-        fwrite("#", 1, 1,filep); 
-        fclose(filep);
-        system("cat /etc/hosts");       
+        printf("%s Unblocked.\n", input_buf);
+        assert(feof(filep));
+        regfree(&rx);
+        //system("cat /etc/hosts");
     }
-    else if (regval == REG_NOMATCH) {
+    else if (result == REG_NOMATCH) {
         printf("Not valid URL");
+        regfree(&rx);
     }
     else {
         printf("Something went shit.");
@@ -98,15 +107,18 @@ int main(int argc, char** argv)
         printf("Type the site url (ex. twitter.com): ");  
         scanf("%s", input_buf);
         block_add(input_buf);
+        fclose(filep);
     }
     else if (in == 2) {
         printf("Type the site url to be unblocked(ex. reddit.com): ");
         scanf("%s", input_buf);
         block_del(input_buf);
+        fclose(filep);
     }
     else
     {
         printf("Not valid number, try again\n");
+        fclose(filep);
     }
     return 0;
     
