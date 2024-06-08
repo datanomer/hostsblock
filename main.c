@@ -7,17 +7,19 @@
 //#include <malloc.h>
 #include <assert.h>
 #include <stdlib.h>
-
-#define HFILE "/etc/hosts"
+#include <string.h>
+#define HFILE "test"
 //#define LOCALIP4 "127.0.0.1"
 #define LOCALH "localhost"
 #define LOCALIP6 "::1"
-FILE *filep;
+FILE * filep;
 
 // plan: ability to remove blocks from sites
 // straight from command line execution(ex. user@machine:~$ hblock twitter.com)
 void block_add(char *input_buf)
 {
+
+    filep = fopen(HFILE, "a+");
     time_t timestamp;
     regex_t rx;
     int regval;
@@ -37,7 +39,6 @@ void block_add(char *input_buf)
     else if (regval == REG_NOMATCH)
     {
         printf("Not valid, try again: ");
-        fclose(filep);
     }
     else
     {
@@ -53,29 +54,48 @@ void block_del(char *input_buf)
 
     int regval = regcomp(&rx, "[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,3}(/[^[:space:]]*)?$" , REG_EXTENDED); 
     int result = regexec(&rx, input_buf, 0, NULL, 0);
-     
-    char *line = NULL;
-    size_t line_len = 0;
+    long len;
+    char * s_pos = 0;
 
     if (result == 0) {
     
         printf("Unblocking %s ... \n ", input_buf);
-    
-        while(getline(&line, &line_len, filep) != -1)
+            
+        //while(getline(&line, &line_len, filep) != -1)
+        //{
+        //    if (result == 0) {
+        filep = fopen(HFILE, "rd");
+        if (filep) {
+            fseek(filep,0, SEEK_END);
+            len = ftell(filep);
+            fseek(filep, 0, SEEK_SET);
+            s_pos = malloc (len);
+        if(s_pos)
         {
-            if (result == 0) {
-                fprintf(filep,"\n#" LOCALH "       %s \n", input_buf);
-                fprintf(filep,"#"LOCALIP6 "             %s ", input_buf);
-            }
-    //delete blocking lines from hfile
-            //fprintf(filep, "%s \n", input_buf);           
+            fread(s_pos,0,len, filep);
         }
-        printf("%s Unblocked.\n", input_buf);
-        assert(feof(filep));
-        regfree(&rx);
-        system("cat /etc/hosts");
-        //system("cat /etc/hosts");
+        
+
+        if (s_pos == input_buf) {
+            
+            fopen(HFILE, "a+");
+            fprintf(filep,"\n#" LOCALH "       %s \n", input_buf);
+            fprintf(filep,"#"LOCALIP6 "             %s", input_buf);           
+        }
+        printf("%s unblocked.\n", input_buf);
     }
+
+        //}
+    //delete blocking lines from hfile
+        //}
+    //    assert(feof(filep));
+    //    regfree(&rx);
+    }
+
+    
+    //strstr(file ,input_buf);
+
+    
     else if (result == REG_NOMATCH) {
         printf("Not valid URL");
         regfree(&rx);
@@ -87,14 +107,11 @@ void block_del(char *input_buf)
         };
     }
 
-    // does not comment out wanted lines in the file    
-
+    system("cat /etc/hosts");
 }
 
 int main(int argc, char** argv)
 {
-
-    filep = fopen(HFILE, "a+");
 
     char input_buf[40]; 
 
@@ -114,7 +131,6 @@ int main(int argc, char** argv)
         printf("Type the site url to be unblocked(ex. reddit.com): ");
         scanf("%s", input_buf);
         block_del(input_buf);
-        fclose(filep);
     }
     else
     {
