@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 //#include <malloc.h>
+#include <stdbool.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,9 +14,34 @@
 #define LOCALH "localhost"
 #define LOCALIP6 "::1"
 FILE * filep;
-
 // plan: ability to remove blocks from sites
 // straight from command line execution(ex. user@machine:~$ hblock twitter.com)
+bool block_exists(char *input_buf)
+{
+    int line_num = 1; 
+    int block_found = 0;
+    char temp[256];
+
+    if ((filep = fopen(HFILE, "r")) == NULL) {
+        return -1;
+    }
+
+    while ((fgets(temp, 256, filep)) != NULL) {
+        if ((strstr(temp, input_buf)) != NULL) {
+            printf("Found match on line: %d\n", line_num); // does not show correct linenum
+            printf("Found in file: %s\n", temp);
+            block_found++;
+        }
+    line_num++;
+    }
+
+    if (block_found == 0) {
+        printf("Didnt find the blocked site.\n");
+        return false;
+    }
+    return true;
+}
+
 void block_add(char *input_buf)
 {
 
@@ -34,6 +60,7 @@ void block_add(char *input_buf)
         printf("Blocking %s ...\n", input_buf);
         
         fclose(filep);
+        regfree(&rx);
         system("cat /etc/hosts");
     }
     else if (regval == REG_NOMATCH)
@@ -45,75 +72,48 @@ void block_add(char *input_buf)
         printf("something happened\n");
         if (filep == NULL) {
             printf("Aborting...\n");
-        };
+            fclose(filep);
+        }
     }
 }
+
 void block_del(char *input_buf)
 {
+    filep = fopen(HFILE, "+a");
     regex_t rx;
+    int regval;
+    regval = regcomp(&rx, "[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,3}(/[^[:space:]]*)?$" , REG_EXTENDED); 
+    regval = regexec(&rx, input_buf, 0, NULL, 0);
 
-    int regval = regcomp(&rx, "[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,3}(/[^[:space:]]*)?$" , REG_EXTENDED); 
-    int result = regexec(&rx, input_buf, 0, NULL, 0);
-    long len;
-    char * s_pos = 0;
-
-    if (result == 0) {
-    
-        printf("Unblocking %s ... \n ", input_buf);
-            
-        //while(getline(&line, &line_len, filep) != -1)
-        //{
-        //    if (result == 0) {
-        filep = fopen(HFILE, "rd");
-        if (filep) {
-            fseek(filep,0, SEEK_END);
-            len = ftell(filep);
-            fseek(filep, 0, SEEK_SET);
-            s_pos = malloc (len);
-        if(s_pos)
-        {
-            fread(s_pos,0,len, filep);
+    if (regval == 0) {
+        regfree(&rx);
+        if (block_exists(input_buf) == true) {
+            fopen(HFILE, "a+");
+            fprintf(filep,"\n" LOCALH "       #%s \n", input_buf);
+            fprintf(filep,""LOCALIP6 "             #%s", input_buf);
+            printf("%s unblocked ... \n ", input_buf);
+            //system("cat /etc/hosts");
         }
         
-
-        if (s_pos == input_buf) {
-            
-            fopen(HFILE, "a+");
-            fprintf(filep,"\n#" LOCALH "       %s \n", input_buf);
-            fprintf(filep,"#"LOCALIP6 "             %s", input_buf);           
-        }
-        printf("%s unblocked.\n", input_buf);
+        fclose(filep);         
     }
-
-        //}
-    //delete blocking lines from hfile
-        //}
-    //    assert(feof(filep));
-    //    regfree(&rx);
-    }
-
-    
-    //strstr(file ,input_buf);
-
-    
-    else if (result == REG_NOMATCH) {
-        printf("Not valid URL");
-        regfree(&rx);
+    else if (regval == REG_NOMATCH) 
+    {
+        printf("Not valid, try again: ");
     }
     else {
         printf("Something went shit.");
         if (filep == NULL) {
             printf("Aborting...\n");
-        };
+            fclose(filep);
+        }
     }
-
-    system("cat /etc/hosts");
 }
 
 int main(int argc, char** argv)
 {
 
-    char input_buf[40]; 
+    char input_buf[40];
 
     printf("|--hblock--|\n"); 
     printf("Choose option: \n1. Block site\n2. Remove block from site \n");
@@ -125,7 +125,7 @@ int main(int argc, char** argv)
         printf("Type the site url (ex. twitter.com): ");  
         scanf("%s", input_buf);
         block_add(input_buf);
-        fclose(filep);
+
     }
     else if (in == 2) {
         printf("Type the site url to be unblocked(ex. reddit.com): ");
