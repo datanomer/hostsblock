@@ -1,3 +1,5 @@
+// hostsblock made by datanomer
+
 #include <stdio.h>
 #include <stddef.h>
 #include <regex.h>
@@ -9,15 +11,15 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#define HFILE "test"
-//#define LOCALIP4 "127.0.0.1"
+#include <unistd.h>
+#define HFILE "/etc/hosts"
 #define LOCALH "localhost"
 #define LOCALIP6 "::1"
 FILE * filep;
-// plan: ability to remove blocks from sites
-// straight from command line execution(ex. user@machine:~$ hblock twitter.com)
+
 bool block_exists(char *input_buf)
 {
+
     int line_num = 1; 
     int block_found = 0;
     char temp[256];
@@ -25,13 +27,13 @@ bool block_exists(char *input_buf)
     if ((filep = fopen(HFILE, "r")) == NULL) {
         return -1;
     }
-
+    
     while ((fgets(temp, 256, filep)) != NULL) {
         if ((strstr(temp, input_buf)) != NULL) {
-            printf("Found match on line: %d\n", line_num); // does not show correct linenum
-            printf("Found in file: %s\n", temp);
+            printf("Found on line %d, %s", line_num, temp); 
             block_found++;
         }
+
     line_num++;
     }
 
@@ -44,16 +46,24 @@ bool block_exists(char *input_buf)
 
 void block_add(char *input_buf)
 {
-
-    filep = fopen(HFILE, "a+");
     time_t timestamp;
     regex_t rx;
     int regval;
     regval = regcomp(&rx, "[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,3}(/[^[:space:]]*)?$" , REG_EXTENDED); 
     regval = regexec(&rx, input_buf, 0, NULL, 0);
 
-    if (regval == 0)
+    if (regval == REG_NOMATCH)
     {
+        printf("Not valid, try again.");
+    } 
+    else if (regval == 0)
+    {
+        if (block_exists(input_buf) == true) {
+            fclose(filep); 
+            exit(0);
+        }
+
+        filep = fopen(HFILE, "a+");
         time(&timestamp);
         fprintf(filep,"\n" LOCALH "       %s #Timestamp: %s ", input_buf, ctime(&timestamp));
         fprintf(filep,""LOCALIP6 "             %s ", input_buf);
@@ -61,11 +71,7 @@ void block_add(char *input_buf)
         
         fclose(filep);
         regfree(&rx);
-        system("cat /etc/hosts");
-    }
-    else if (regval == REG_NOMATCH)
-    {
-        printf("Not valid, try again: ");
+        system("cat "HFILE"");
     }
     else
     {
@@ -79,33 +85,63 @@ void block_add(char *input_buf)
 
 void block_del(char *input_buf)
 {
-    filep = fopen(HFILE, "+a");
     regex_t rx;
     int regval;
     regval = regcomp(&rx, "[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,3}(/[^[:space:]]*)?$" , REG_EXTENDED); 
     regval = regexec(&rx, input_buf, 0, NULL, 0);
+    FILE * tempfp;
+    int counter = 0;
+    char blankline = '\0';
+    char buffer[256];
+    int line_num = 1;
 
-    if (regval == 0) {
-        regfree(&rx);
-        if (block_exists(input_buf) == true) {
-            fopen(HFILE, "a+");
-            fprintf(filep,"\n" LOCALH "       #%s \n", input_buf);
-            fprintf(filep,""LOCALIP6 "             #%s", input_buf);
-            printf("%s unblocked ... \n ", input_buf);
-            //system("cat /etc/hosts");
-        }
-        
-        fclose(filep);         
-    }
-    else if (regval == REG_NOMATCH) 
+    if (regval == REG_NOMATCH) 
     {
-        printf("Not valid, try again: ");
+        printf("Not valid, try again.");
     }
+    else if (regval == 0) {
+       
+        if (block_exists(input_buf) == false) {
+            fclose(filep); 
+            exit(0);
+        }
+        filep = fopen(HFILE, "r");
+        tempfp = fopen(".hbtemp.txt", "w");    
+       
+        while ((fgets(buffer, 256, filep)) != NULL) {
+            if ((strstr(buffer, input_buf)) == NULL) {
+                fflush(tempfp);
+                if (counter == line_num) {
+                    fputs(&blankline, tempfp);
+                }
+                else {
+                    fputs(buffer, tempfp);
+                }        
+                fflush(tempfp);
+                counter++;
+            }
+        line_num++;
+        }
+                
+        printf("\n%s unblocked ... \n ", input_buf);
+    
+        rename(".hbtemp.txt", "hosts"); 
+        system("mv hosts "HFILE"");
+        //system("cat testetc/hosts");
+        remove(".hbtemp.txt");
+        remove("hosts");
+        system("rm -rf hosts");
+        
+        fclose(filep);
+        fclose(tempfp);
+    }
+
     else {
         printf("Something went shit.");
         if (filep == NULL) {
             printf("Aborting...\n");
             fclose(filep);
+            fclose(tempfp);
         }
     }
 }
@@ -113,9 +149,9 @@ void block_del(char *input_buf)
 int main(int argc, char** argv)
 {
 
-    char input_buf[40];
+    char input_buf[128];
 
-    printf("|--hblock--|\n"); 
+    printf("|--hostsblock--|\n");
     printf("Choose option: \n1. Block site\n2. Remove block from site \n");
     printf("Choice: ");
     int in;
@@ -135,8 +171,9 @@ int main(int argc, char** argv)
     else
     {
         printf("Not valid number, try again\n");
-        fclose(filep);
+        return 1;
     }
+
     return 0;
     
 }
