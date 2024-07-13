@@ -131,9 +131,9 @@ void block_del(char *input_buf)
         remove(".hbtemp.txt");
         remove("hosts");
         system("rm -rf hosts");
-        
         fclose(filep);
         fclose(tempfp);
+        system("cat "HFILE"");
     }
 
     else {
@@ -153,6 +153,9 @@ int main(int argc, char** argv)
 
     printf("|--hostsblock--|\n");
     printf("Choose option: \n1. Block site\n2. Remove block from site \n");
+    printf("---------|/etc/hosts|----------\n");
+    system("cat "HFILE"");
+    printf("\n--------------EOF--------------\n");
     printf("Choice: ");
     int in;
     scanf("%d", &in);
