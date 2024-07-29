@@ -71,7 +71,10 @@ void block_add(char *input_buf)
         
         fclose(filep);
         regfree(&rx);
+        printf("---------|/etc/hosts|----------\n");
         system("cat "HFILE"");
+        printf("\n--------------EOF--------------\n");
+    
     }
     else
     {
@@ -133,7 +136,10 @@ void block_del(char *input_buf)
         system("rm -rf hosts");
         fclose(filep);
         fclose(tempfp);
+        printf("---------|/etc/hosts|----------\n");
         system("cat "HFILE"");
+        printf("\n--------------EOF--------------\n");
+    
     }
 
     else {
