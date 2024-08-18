@@ -30,7 +30,7 @@ bool block_exists(char *input_buf)
     
     while ((fgets(temp, 256, filep)) != NULL) {
         if ((strstr(temp, input_buf)) != NULL) {
-            printf("Found on line %d, %s", line_num, temp); 
+            //printf("Found on line %d, %s", line_num, temp); //for debug 
             block_found++;
         }
 
@@ -38,7 +38,7 @@ bool block_exists(char *input_buf)
     }
 
     if (block_found == 0) {
-        printf("Didnt find the blocked site.\n");
+        printf("[*!] Didnt find the blocked site on the list ...\n");
         return false;
     }
     return true;
@@ -54,7 +54,7 @@ void block_add(char *input_buf)
 
     if (regval == REG_NOMATCH)
     {
-        printf("Not valid, try again.");
+        printf("[!] Not valid, try again.");
     } 
     else if (regval == 0)
     {
@@ -67,7 +67,7 @@ void block_add(char *input_buf)
         time(&timestamp);
         fprintf(filep,"\n" LOCALH "       %s #Timestamp: %s ", input_buf, ctime(&timestamp));
         fprintf(filep,""LOCALIP6 "             %s ", input_buf);
-        printf("Blocking %s ...\n", input_buf);
+        printf("[*] Blocking %s ...\n", input_buf);
         
         fclose(filep);
         regfree(&rx);
@@ -78,7 +78,7 @@ void block_add(char *input_buf)
     }
     else
     {
-        printf("something happened\n");
+        printf("[!] Something happened.\n");
         if (filep == NULL) {
             printf("Aborting...\n");
             fclose(filep);
@@ -100,7 +100,7 @@ void block_del(char *input_buf)
 
     if (regval == REG_NOMATCH) 
     {
-        printf("Not valid, try again.");
+        printf("[!] Not valid, try again.");
     }
     else if (regval == 0) {
        
@@ -126,7 +126,7 @@ void block_del(char *input_buf)
         line_num++;
         }
                 
-        printf("\n%s unblocked ... \n ", input_buf);
+        printf("\n[*] %s unblocked ... \n ", input_buf);
     
         rename(".hbtemp.txt", "hosts"); 
         system("mv hosts "HFILE"");
@@ -179,7 +179,7 @@ int main(int argc, char** argv)
     }
     else
     {
-        printf("Not valid number, try again\n");
+        printf("[!] Not valid number, try again\n");
         return 1;
     }
 
