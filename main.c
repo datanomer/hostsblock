@@ -1,9 +1,12 @@
 // hostsblock made by datanomer
+//crap code but works idc
 
 #include <stdio.h>
 #include <stddef.h>
 #include <regex.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <time.h>
 //#include <malloc.h>
@@ -12,6 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
+//some useless libs maybe included
+
 #define HFILE "/etc/hosts"
 #define LOCALH "localhost"
 #define LOCALIP6 "::1"
@@ -41,6 +47,7 @@ bool block_exists(char *input_buf)
         printf("[*!] Didnt find the blocked site on the list ...\n");
         return false;
     }
+
     return true;
 }
 
@@ -56,9 +63,11 @@ void block_add(char *input_buf)
     {
         printf("[!] Not valid, try again.");
     } 
+    
     else if (regval == 0)
     {
         if (block_exists(input_buf) == true) {
+            printf("[!] Block already exists.\n");
             fclose(filep); 
             exit(0);
         }
@@ -102,19 +111,19 @@ void block_del(char *input_buf)
     {
         printf("[!] Not valid, try again.");
     }
-    else if (regval == 0) {
-       
+    else if (regval == 0) { 
         if (block_exists(input_buf) == false) {
             fclose(filep); 
             exit(0);
         }
+
         filep = fopen(HFILE, "r");
         tempfp = fopen(".hbtemp.txt", "w");    
-       
+           
         while ((fgets(buffer, 256, filep)) != NULL) {
             if ((strstr(buffer, input_buf)) == NULL) {
                 fflush(tempfp);
-                if (counter == line_num) {
+                if (counter == line_num) {            
                     fputs(&blankline, tempfp);
                 }
                 else {
@@ -125,9 +134,9 @@ void block_del(char *input_buf)
             }
         line_num++;
         }
-                
+                    
         printf("\n[*] %s unblocked ... \n ", input_buf);
-    
+        
         rename(".hbtemp.txt", "hosts"); 
         system("mv hosts "HFILE"");
         //system("cat testetc/hosts");
@@ -139,9 +148,8 @@ void block_del(char *input_buf)
         printf("---------|/etc/hosts|----------\n");
         system("cat "HFILE"");
         printf("\n--------------EOF--------------\n");
-    
+        
     }
-
     else {
         printf("Something went shit.");
         if (filep == NULL) {
@@ -154,6 +162,16 @@ void block_del(char *input_buf)
 
 int main(int argc, char** argv)
 {
+
+    //check if access to file
+    struct stat statbuf;
+    int fildes = open(HFILE, O_RDWR);
+    int status = fstat(fildes, &statbuf);
+
+    if (status == -1) {
+        printf("[!] You have to run program as superuser!\n");
+        exit(-1);
+    }
 
     char input_buf[128];
 
