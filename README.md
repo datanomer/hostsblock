@@ -1,5 +1,5 @@
 # hostsblock
-Simple website blocker which utilizes the /etc/hosts file to block sites on local machine.
+Simple website blocker for linux which utilizes the /etc/hosts file to block sites on local machine.
 Use at your own responsibility.
 ## requirement:
 * Cmake
