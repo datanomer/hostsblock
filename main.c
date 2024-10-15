@@ -74,7 +74,7 @@ void block_add(char *input_buf)
 
         filep = fopen(HFILE, "a+");
         time(&timestamp);
-        fprintf(filep,"\n" LOCALH "       %s #Timestamp: %s ", input_buf, ctime(&timestamp));
+        fprintf(filep,"\n" LOCALH "       %s #(Added by hostsblock) Timestamp: %s ", input_buf, ctime(&timestamp));
         fprintf(filep,""LOCALIP6 "             %s ", input_buf);
         printf("[*] Blocking %s ...\n", input_buf);
         
@@ -174,6 +174,14 @@ int main(int argc, char** argv)
     }
 
     char input_buf[128];
+    // take input from a external blocklist
+    // on error case output help msg.
+
+    if (argc > 3) {
+        printf("[!] Too many args.\n");
+        printf("Usage: hblock <arg> <file>"); 
+        return -1;
+    }
 
     printf("|--hostsblock--|\n");
     printf("Choose option: \n1. Block site\n2. Remove block from site \n");
