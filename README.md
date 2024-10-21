@@ -10,7 +10,7 @@ Use at your own responsibility.
 Run the command ```make``` in the cloned directory.
 Then execute the program with appropriate permissions ```sudo ./hblock```.
 
-It is possible to use a external domain blocklist with the flag ```-i``` ex. ```sudo ./hblock -i <blocklist>```.  
+It is possible to use a external domain blocklist: ```sudo ./hblock <blocklist>```.  
 
 ## Information and stuff:
 
