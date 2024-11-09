@@ -15,4 +15,4 @@ It is possible to use a external domain blocklist: ```sudo ./hblock <blocklist>`
 ## Information and stuff:
 
 - Hostsblock simply writes the input site to the hosts file (found in linux by /etc/hosts) and redirects it to localhost address
-### NOTE: You have to refresh the blocked page. You may have to clear the cache and restart the browser in some cases.
+### NOTE: You have to refresh the blocked page for the block to take effect. You may have to clear the cache and restart the browser in some cases.
